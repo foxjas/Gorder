@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
 	ios::sync_with_stdio(false);
 	int i;
 	int W=5;
+    int k = -1;
 	clock_t start, end;
 	string filename;
 
@@ -45,6 +46,15 @@ int main(int argc, char* argv[]){
 			}
 			i++;
 		}
+        else if(strcmp("-k", argv[i])==0){
+			i++;
+			k=atoi(argv[i]);
+			if(k<=0){
+				cout << "k should be larger than 0" << endl;
+				quit();
+			}
+			i++;
+		}
 		else{
 			filename=argv[i++];
 		}
@@ -52,14 +62,16 @@ int main(int argc, char* argv[]){
 
 	srand(time(0));
 
-	Graph g, g_topk;
+	Graph g;
+    Graph g_topk;
 	string name;
 	name=extractFilename(filename.c_str());
 	g.setFilename(name);
 
 	start=clock();
 	g.readGraph(filename);
-	g_topk.TopKTransform(k, g);
+    if (k != -1) 
+    	g.TopKTransform(k);
 	cout << name << " readGraph is complete." << endl;
 	end=clock();
 	cout << "Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;

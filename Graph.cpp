@@ -203,26 +203,30 @@ void Graph::Transform(){
 	}
 }
 
-void Graph::TopKTransform(int k, Graph g){
+void Graph::TopKTransform(int k){
     
-    typdef std::pair<int, int> deg_node_pair;
+    typedef std::pair<int, int> deg_node_p;
     vector<deg_node_p> deg_id_pairs(graph.size());
     for (int i=0; i<graph.size(); i++) {
         deg_id_pairs[i] = make_pair(graph[i].indegree, i);
     }
     sort(deg_id_pairs.begin(), deg_id_pairs.end(), greater<deg_node_p>()); 
-    deg_node_pair kth_pair = deg_id_pairs[k];
+    deg_node_p kth_pair = deg_id_pairs[k];
     int deg_cutoff = kth_pair.first;
+    cout << "degree cutoff for k=" << k << ": " << deg_cutoff << std::endl;
 
 	vector<int>().swap(inedge);
 	vector< pair<int, int> > edges;
 	edges.reserve(edgenum);
+    long long new_edgenum = 0;
 	for(int i=0; i<vsize; i++){
 		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++)
             if (graph[outedge[j]].indegree >= deg_cutoff) {
 			    edges.push_back(make_pair(i, outedge[j]));
+                new_edgenum += 1;
             }
 	}
+    cout << "new |E|: " << new_edgenum << std::endl;
 
 	for(int i=0; i<vsize; i++){
 		graph[i].outdegree=graph[i].indegree=0;
@@ -238,6 +242,7 @@ void Graph::TopKTransform(int k, Graph g){
 		graph[i].outstart=graph[i-1].outstart+graph[i-1].outdegree;
 		graph[i].instart=graph[i-1].instart+graph[i-1].indegree;
 	}
+    edgenum = new_edgenum;
 	graph[vsize].outstart=edgenum;
 	graph[vsize].instart=edgenum;
 
