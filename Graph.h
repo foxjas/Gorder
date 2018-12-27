@@ -78,6 +78,7 @@ class Graph{
 		void GapCount();
 		double GapCost(vector<int>& order);
 		void Transform();
+		void TopKTransform(int k);
 		void GorderGreedy(vector<int>& order, int window);
 
 		void RCMOrder(vector<int>& order);

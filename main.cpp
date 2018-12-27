@@ -52,14 +52,14 @@ int main(int argc, char* argv[]){
 
 	srand(time(0));
 
-	Graph g;
+	Graph g, g_topk;
 	string name;
 	name=extractFilename(filename.c_str());
 	g.setFilename(name);
 
 	start=clock();
 	g.readGraph(filename);
-	g.Transform();
+	g_topk.TopKTransform(k, g);
 	cout << name << " readGraph is complete." << endl;
 	end=clock();
 	cout << "Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;
