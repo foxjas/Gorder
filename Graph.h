@@ -65,7 +65,7 @@ class Graph{
 		Graph();
 		~Graph();
 		void clear();
-		void readGraph(const string& fullname);
+		void readGraph(const string& fullname, bool undirected);
 		void writeGraph(ostream&);
 		void PrintReOrderedGraph(const vector<int>& order);
 		void GraphAnalysis();

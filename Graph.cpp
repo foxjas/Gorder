@@ -37,7 +37,7 @@ void Graph::clear() {
 }
 
 
-void Graph::readGraph(const string& fullname) {
+void Graph::readGraph(const string& fullname, bool undirected=false) {
 	FILE* fp;
 	fp=fopen(fullname.c_str(), "r");
 	if(fp==NULL){
@@ -66,13 +66,17 @@ void Graph::readGraph(const string& fullname) {
 
 			if(u==v)
 				continue;
-			edgenum++;
+			edgenum+=1;
 			if(u>vsize)
 				vsize=u;
 			if(v>vsize)
 				vsize=v;
 
 			edges.push_back(make_pair(u, v));
+            if (undirected) {
+                edges.push_back(make_pair(v, u)); // assumes graph is undirected
+                edgenum += 1;
+            }
 		}
 	}
 	vsize++;

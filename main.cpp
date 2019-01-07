@@ -27,6 +27,7 @@ int main(int argc, char* argv[]){
 	int i;
 	int W=5;
     int k = -1;
+    bool undirected=false;
 	clock_t start, end;
 	string filename;
 
@@ -55,6 +56,10 @@ int main(int argc, char* argv[]){
 			}
 			i++;
 		}
+        else if(strcmp("-u", argv[i])==0){
+		    undirected=true;
+			i++;
+		}
 		else{
 			filename=argv[i++];
 		}
@@ -69,9 +74,12 @@ int main(int argc, char* argv[]){
 	g.setFilename(name);
 
 	start=clock();
-	g.readGraph(filename);
-    if (k != -1) 
+	g.readGraph(filename, undirected);
+    if (k != -1) { 
     	g.TopKTransform(k);
+    } else {
+        g.Transform();
+    }
 	cout << name << " readGraph is complete." << endl;
 	end=clock();
 	cout << "Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;
