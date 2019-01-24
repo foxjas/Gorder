@@ -83,17 +83,19 @@ void Graph::readGraph(const string& fullname, bool undirected=false) {
 
 	fclose(fp);
 	graph.resize(vsize+1);
+	// calculate in and out degrees
 	for(long long i=0; i<edges.size(); i++){
 		graph[edges[i].first].outdegree++;
 		graph[edges[i].second].indegree++;
 	}
 	graph[0].outstart=0;
 	graph[0].instart=0;
+	// prefix sum of in and out degrees -> in and out offsets
 	for(int i=1; i<vsize; i++){
 		graph[i].outstart=graph[i-1].outstart+graph[i-1].outdegree;
 		graph[i].instart=graph[i-1].instart+graph[i-1].indegree;
 	}
-	
+	// sort edges in increasing order
 	sort(edges.begin(), edges.end(), [](const pair<int, int>& a, const pair<int, int>& b)->bool{
 		if(a.first<b.first)
 			return true;
@@ -109,6 +111,7 @@ void Graph::readGraph(const string& fullname, bool undirected=false) {
 
 	});
 	outedge.resize(edgenum);
+	// fill in out edges
 	for(long long i=0; i<edges.size(); i++){
 		outedge[i]=edges[i].second;
 	}
@@ -120,6 +123,7 @@ void Graph::readGraph(const string& fullname, bool undirected=false) {
 		inpos[i]=graph[i].instart;
 	}
 	inedge.resize(edgenum);
+	// fills in CSR for in-edges
 	for(int u=0; u<vsize; u++){
 		for(int j=graph[u].outstart; j<graph[u].outstart+graph[u].outdegree; j++){
 			inedge[inpos[outedge[j]]]=u;
@@ -484,7 +488,7 @@ void Graph::GorderGreedy(vector<int>& retorder, int window){
 	vector<bool> popvexist(vsize, false);
 	vector<int> order;
 	int count=0;
-	vector<int> zero;
+	vector<int> zero; // for zero degree vertices?
 	zero.reserve(10000);
 	order.reserve(vsize);
 	const int hugevertex=sqrt((double)vsize);
