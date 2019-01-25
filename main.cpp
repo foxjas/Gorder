@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 	ios::sync_with_stdio(false);
 	int i;
 	int W=5;
-    int k = -1;
+    int k = 0;
     bool undirected=false;
 	clock_t start, end;
 	string filename;
@@ -50,10 +50,10 @@ int main(int argc, char* argv[]){
         else if(strcmp("-k", argv[i])==0){
 			i++;
 			k=atoi(argv[i]);
-			if(k<=0){
-				cout << "k should be larger than 0" << endl;
-				quit();
-			}
+			// if(k<=0){
+			// 	cout << "k should be larger than 0" << endl;
+			// 	quit();
+			// }
 			i++;
 		}
         else if(strcmp("-u", argv[i])==0){
@@ -67,27 +67,36 @@ int main(int argc, char* argv[]){
 
 	srand(time(0));
 
-	Graph g;
-    Graph g_topk;
+	Graph g, g_tmp;
 	string name;
 	name=extractFilename(filename.c_str());
 	g.setFilename(name);
 
-	start=clock();
-	g.readGraph(filename, undirected);
-    if (k != -1) { 
-    	g.TopKTransform(k);
-    } else {
-        g.Transform();
-    }
+	//start=clock();
+	g.readGraph(filename, false); // want to output relabeled graph as undirected
+	vector<int> removed;
+	if (k) {
+		g.RemoveGreaterThanTopK(0); // this is just to have consistent graph creation
+		g_tmp.setFilename(name);
+		g_tmp.readGraph(filename, undirected);
+    	removed = g_tmp.RemoveGreaterThanTopK(k);
+	} else {
+	    g.Transform();
+	}
+
 	cout << name << " readGraph is complete." << endl;
-	end=clock();
-	cout << "Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;
+	//end=clock();
+	//cout << "Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;
 
 	start=clock();
 	vector<int> order;
-	g.GorderGreedy(order, W);
+	if (k) {
+		g_tmp.GorderGreedy(order, removed, W);
+	} else {
+		g.GorderGreedy(order, W);
+	}
 	end=clock();
+	// cout << "New ordering size: " << order.size() << endl;
 	cout << "ReOrdered Time Cost: " << (double)(end-start)/CLOCKS_PER_SEC << endl;
 	cout << "Begin Output the Reordered Graph" << endl;
 	g.PrintReOrderedGraph(order);

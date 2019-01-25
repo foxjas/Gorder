@@ -211,7 +211,92 @@ void Graph::Transform(){
 	}
 }
 
-void Graph::TopKTransform(int k){
+// /**
+//  * Remove vertices with less than top k by degree
+//  */
+// void Graph::RemoveLessThanTopK(int k){
+    
+//     typedef std::pair<int, int> deg_node_p;
+//     vector<deg_node_p> deg_id_pairs(graph.size());
+//     for (int i=0; i<graph.size(); i++) {
+//         deg_id_pairs[i] = make_pair(graph[i].indegree, i);
+//     }
+//     sort(deg_id_pairs.begin(), deg_id_pairs.end(), greater<deg_node_p>()); 
+//     deg_node_p kth_pair = deg_id_pairs[k];
+//     int deg_cutoff = kth_pair.first;
+//     cout << "degree cutoff for k=" << k << ": " << deg_cutoff << std::endl;
+
+// 	vector<int>().swap(inedge);
+// 	vector< pair<int, int> > edges;
+// 	edges.reserve(edgenum);
+//     long long new_edgenum = 0;
+// 	for(int i=0; i<vsize; i++){
+// 		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++)
+//             if (graph[outedge[j]].indegree >= deg_cutoff) {
+// 			    edges.push_back(make_pair(i, outedge[j]));
+//                 new_edgenum += 1;
+//             }
+// 	}
+//     cout << "new |E|: " << new_edgenum << std::endl;
+
+// 	for(int i=0; i<vsize; i++){
+// 		graph[i].outdegree=graph[i].indegree=0;
+// 	}
+// 	for(int i=0; i<edges.size(); i++){
+// 		graph[edges[i].first].outdegree++;
+// 		graph[edges[i].second].indegree++;
+// 	}
+
+// 	graph[0].outstart=0;
+// 	graph[0].instart=0;
+// 	for(int i=1; i<vsize; i++){
+// 		graph[i].outstart=graph[i-1].outstart+graph[i-1].outdegree;
+// 		graph[i].instart=graph[i-1].instart+graph[i-1].indegree;
+// 	}
+//     edgenum = new_edgenum;
+// 	graph[vsize].outstart=edgenum;
+// 	graph[vsize].instart=edgenum;
+
+// 	sort(edges.begin(), edges.end(), [](const pair<int, int>& a, const pair<int, int>& b)->bool{
+// 		if(a.first<b.first)
+// 			return true;
+// 		else if(a.first>b.first)
+// 			return false;
+// 		else{
+
+// 			if(a.second<=b.second)
+// 				return true;
+// 			else
+// 				return false;
+// 		}
+// 	});
+
+// 	outedge.resize(edgenum);
+// 	for(long long i=0; i<edges.size(); i++){
+// 		outedge[i]=edges[i].second;
+// 	}
+// 	vector< pair<int, int> >().swap(edges);
+// 	vector<int> inpos(vsize);
+// 	for(int i=0; i<vsize; i++){
+// 		inpos[i]=graph[i].instart;
+// 	}
+// 	inedge.resize(edgenum);
+// 	for(int u=0; u<vsize; u++){
+// 		for(int j=graph[u].outstart; j<graph[u].outstart+graph[u].outdegree; j++){
+// 			inedge[inpos[outedge[j]]]=u;
+// 			inpos[outedge[j]]++;
+// 		}
+// 	}
+// }
+
+
+/**
+ * Remove vertices with greater than top k by degree
+ * k is 1-indexed
+ * No removals if k <= 0
+ * @returns vector of removed vertices
+ */
+vector<int> Graph::RemoveGreaterThanTopK(int k){
     
     typedef std::pair<int, int> deg_node_p;
     vector<deg_node_p> deg_id_pairs(graph.size());
@@ -219,22 +304,43 @@ void Graph::TopKTransform(int k){
         deg_id_pairs[i] = make_pair(graph[i].indegree, i);
     }
     sort(deg_id_pairs.begin(), deg_id_pairs.end(), greater<deg_node_p>()); 
-    deg_node_p kth_pair = deg_id_pairs[k];
-    int deg_cutoff = kth_pair.first;
-    cout << "degree cutoff for k=" << k << ": " << deg_cutoff << std::endl;
+    int deg_cutoff = INT_MAX/2; // default for k = 0
+    if (k > 0) {
+	    deg_node_p kth_pair = deg_id_pairs[k-1];
+	    deg_cutoff = kth_pair.first;
+    	cout << "degree cutoff for k=" << k << ": " << deg_cutoff << std::endl;
+   	}
 
-	vector<int>().swap(inedge);
+    // loop over over sorted deg pairs and add vertices that are greater than
+    // or equal to degree of k-th vertex
+    vector<int> removedVertices;
+    removedVertices.reserve(k);
+    int i = 0;
+    int curr_deg = deg_id_pairs[i].first;
+    while (curr_deg >= deg_cutoff) {
+    	removedVertices.push_back(deg_id_pairs[i].second);
+    	i += 1;
+    	curr_deg = deg_id_pairs[i].first;
+    }
+    // should be zero if k <= 0
+    cout << "removed vertices: " << removedVertices.size() << std::endl;
+
+	vector<int>().swap(inedge); // deallocate inedge
 	vector< pair<int, int> > edges;
 	edges.reserve(edgenum);
     long long new_edgenum = 0;
 	for(int i=0; i<vsize; i++){
-		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++)
-            if (graph[outedge[j]].indegree >= deg_cutoff) {
+		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++) {
+            if (graph[outedge[j]].indegree < deg_cutoff) {
 			    edges.push_back(make_pair(i, outedge[j]));
                 new_edgenum += 1;
             }
+        }
 	}
-    cout << "new |E|: " << new_edgenum << std::endl;
+
+	if (k) {
+    	cout << "new |E|: " << new_edgenum << std::endl;
+	}
 
 	for(int i=0; i<vsize; i++){
 		graph[i].outdegree=graph[i].indegree=0;
@@ -284,7 +390,10 @@ void Graph::TopKTransform(int k){
 			inpos[outedge[j]]++;
 		}
 	}
+
+	return removedVertices;
 }
+
 
 void Graph::writeGraph(ostream& out){
 	for(int u=0; u<vsize; u++){
@@ -718,6 +827,246 @@ void Graph::GorderGreedy(vector<int>& retorder, int window){
 		retorder[order[i]]=i;
 	}
 }
+
+
+/**
+ * Version that takes in a list of vertices to omit from Gorder.
+ * The list of vertex IDs are instead simply appended to the end.
+ */ 
+void Graph::GorderGreedy(vector<int>& retorder, vector<int>& skipVertices, int window){
+	UnitHeap unitheap(vsize);
+	vector<bool> popvexist(vsize, false);
+	vector<int> order;
+	int count=0;
+	order.reserve(vsize);
+	const int hugevertex=sqrt((double)vsize);
+
+	for(int i=0; i<vsize; i++){
+		unitheap.LinkedList[i].key=graph[i].indegree;
+		unitheap.update[i]=-graph[i].indegree;
+	}
+	unitheap.ReConstruct();
+
+	int tmpindex, tmpweight;
+
+	tmpweight=-1;
+	for(int i=0; i<vsize; i++){
+		// tracks highest degree vertex
+		if(graph[i].indegree>tmpweight){
+			tmpweight=graph[i].indegree;
+			tmpindex=i;
+		}else if(graph[i].indegree+graph[i].outdegree==0){
+			unitheap.update[i]=INT_MAX/2;
+			unitheap.DeleteElement(i);
+		}
+	}
+
+	order.push_back(tmpindex);
+	unitheap.update[tmpindex]=INT_MAX/2;
+	unitheap.DeleteElement(tmpindex);
+	for(int i=graph[tmpindex].instart, limit1=graph[tmpindex+1].instart; i<limit1; i++){
+		int u=inedge[i];
+		if(graph[u].outdegree<=hugevertex){
+			if(unitheap.update[u]==0){
+				unitheap.IncrementKey(u);
+			} else {
+#ifndef Release
+				if(unitheap.update[u]==INT_MAX)
+					unitheap.update[u]=INT_MAX/2;
+#endif
+				unitheap.update[u]++;
+			}
+			
+			if(graph[u].outdegree>1)
+			for(int j=graph[u].outstart, limit2=graph[u+1].outstart; j<limit2; j++){
+				int w=outedge[j];
+				if(unitheap.update[w]==0){
+					unitheap.IncrementKey(w);
+				} else {
+#ifndef Release
+					if(unitheap.update[w]==INT_MAX)
+						unitheap.update[w]=INT_MAX/2;
+#endif
+					unitheap.update[w]++;
+				}
+				
+			}
+		}
+	}
+	if(graph[tmpindex].outdegree<=hugevertex){
+		for(int i=graph[tmpindex].outstart, limit1=graph[tmpindex+1].outstart; i<limit1; i++){
+			int w=outedge[i];
+			if(unitheap.update[w]==0){
+				unitheap.IncrementKey(w);
+			}else{
+#ifndef Release
+				if(unitheap.update[w]==INT_MAX)
+					unitheap.update[w]=INT_MAX/2;
+#endif
+				unitheap.update[w]++;
+			}
+			
+		}
+	}
+
+#ifndef Release
+	clock_t time1, time2, time3, time4;
+	clock_t sum1=0, sum2=0, sum3=0;
+#endif
+
+	while(count<vsize-1-skipVertices.size()){
+#ifndef Release
+		if(count%1000000==0){
+			cout << count << endl;
+			cout << "sum1: " << sum1 << endl;
+			cout << "sum2: " << sum2 << endl;
+			cout << "sum3: " << sum3 << endl;
+			cout << endl;
+			sum1=sum2=sum3=0;
+		}
+				
+		time1=clock();
+#endif
+
+		int v=unitheap.ExtractMax();
+		count++;
+#ifndef Release
+		time2=clock();
+#endif
+		order.push_back(v);
+		unitheap.update[v]=INT_MAX/2;
+
+		int popv;
+		if(count-window>=0)
+			popv=order[count-window];
+		else
+			popv=-1;
+
+		if(popv>=0){
+			if(graph[popv].outdegree<=hugevertex){
+				for(int i=graph[popv].outstart, limit1=graph[popv+1].outstart; i<limit1; i++){
+					int w=outedge[i];
+					unitheap.update[w]--;
+#ifndef Release
+					if(unitheap.update[w]==0)
+						unitheap.update[w]=INT_MAX/2;
+#endif
+				}
+			}
+
+			for(int i=graph[popv].instart, limit1=graph[popv+1].instart; i<limit1; i++){
+				int u=inedge[i];
+				if(graph[u].outdegree<=hugevertex){
+					unitheap.update[u]--;
+#ifndef Release
+					if(unitheap.update[u]==0)
+						unitheap.update[u]=INT_MAX/2;
+#endif
+					if(graph[u].outdegree>1)
+					if(binary_search(&outedge[graph[u].outstart], &outedge[graph[u+1].outstart], v)==false){
+						for(int j=graph[u].outstart, limit2=graph[u+1].outstart; j<limit2; j++){
+							int w=outedge[j];
+							unitheap.update[w]--;
+#ifndef Release
+							if(unitheap.update[w]==0)
+								unitheap.update[w]=INT_MAX/2;
+#endif
+						}
+					} else {
+						popvexist[u]=true;
+					}
+				}
+			}
+		}
+
+#ifndef Release
+		time3=clock();
+#endif
+		if(graph[v].outdegree<=hugevertex){
+			for(int i=graph[v].outstart, limit1=graph[v+1].outstart; i<limit1; i++){
+				int w=outedge[i];
+				if(__builtin_expect(unitheap.update[w]==0, 0)){
+					unitheap.IncrementKey(w);
+				} else {
+#ifndef Release
+					if(unitheap.update[w]==INT_MAX)
+						unitheap.update[w]=INT_MAX/2;
+#endif
+					unitheap.update[w]++;
+				}
+				
+			}
+		}
+
+		for(int i=graph[v].instart, limit1=graph[v+1].instart; i<limit1; i++){
+			int u=inedge[i];
+			if(graph[u].outdegree<=hugevertex){
+				if(__builtin_expect(unitheap.update[u]==0, 0)){
+					unitheap.IncrementKey(u);
+				} else {
+#ifndef Release
+					if(unitheap.update[u]==INT_MAX)
+						unitheap.update[u]=INT_MAX/2;
+#endif
+					unitheap.update[u]++;
+				}
+				
+				if(popvexist[u]==false){
+					if(graph[u].outdegree>1)
+					for(int j=graph[u].outstart, limit2=graph[u+1].outstart; j<limit2; j++){
+						int w=outedge[j];
+						if(__builtin_expect(unitheap.update[w]==0, 0)){
+							unitheap.IncrementKey(w);
+						}else{
+#ifndef Release
+							if(unitheap.update[w]==INT_MAX)
+								unitheap.update[w]=INT_MAX/2;
+#endif
+							unitheap.update[w]++;
+						}
+					}
+				} else {
+					popvexist[u]=false;
+				}
+			}
+		}
+
+
+#ifndef Release
+	time4=clock();
+	sum1+=time2-time1;
+	sum2+=time3-time2;
+	sum3+=time4-time3;
+#endif
+	}
+	order.insert(order.end()-1, skipVertices.begin(), skipVertices.end());
+
+
+#ifndef Release
+	vector<int> tmporder=order;
+	sort(tmporder.begin(), tmporder.end());
+	for(int i=0; i<tmporder.size()-1; i++){
+		if(tmporder[i]==tmporder[i+1]){
+			cout << "same elements: " << tmporder[i] << endl;
+			system("pause");
+		}
+	}
+	for(int i=0; i<tmporder.size(); i++){
+		if(tmporder[i]!=i){
+			cout << tmporder[i] << '\t' << i << endl;
+			system("pause");
+		}
+	}
+	tmporder=vector<int>();
+#endif
+
+	retorder.clear();
+	retorder.resize(vsize);
+	for(int i=0; i<vsize; i++){
+		retorder[order[i]]=i;
+	}
+}
+
 
 
 void Graph::RCMOrder(vector<int>& retorder){
