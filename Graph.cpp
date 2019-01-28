@@ -323,7 +323,7 @@ vector<int> Graph::RemoveGreaterThanTopK(int k){
     	curr_deg = deg_id_pairs[i].first;
     }
     // should be zero if k <= 0
-    cout << "removed vertices: " << removedVertices.size() << std::endl;
+    cout << "removed vertices: " << removedVertices.size() << endl;
 
 	vector<int>().swap(inedge); // deallocate inedge
 	vector< pair<int, int> > edges;
@@ -331,7 +331,7 @@ vector<int> Graph::RemoveGreaterThanTopK(int k){
     long long new_edgenum = 0;
 	for(int i=0; i<vsize; i++){
 		for(int j=graph[i].outstart, limit=graph[i+1].outstart; j<limit; j++) {
-            if (graph[outedge[j]].indegree < deg_cutoff) {
+            if (graph[outedge[j]].indegree < deg_cutoff) { // only connect to vertices meeting deg cutoff
 			    edges.push_back(make_pair(i, outedge[j]));
                 new_edgenum += 1;
             }
@@ -339,7 +339,7 @@ vector<int> Graph::RemoveGreaterThanTopK(int k){
 	}
 
 	if (k) {
-    	cout << "new |E|: " << new_edgenum << std::endl;
+    	cout << "new edgenum: " << new_edgenum << std::endl;
 	}
 
 	for(int i=0; i<vsize; i++){
@@ -837,6 +837,7 @@ void Graph::GorderGreedy(vector<int>& retorder, vector<int>& skipVertices, int w
 	UnitHeap unitheap(vsize);
 	vector<bool> popvexist(vsize, false);
 	vector<int> order;
+	set<int> skipSet(skipVertices.begin(), skipVertices.end());
 	int count=0;
 	order.reserve(vsize);
 	const int hugevertex=sqrt((double)vsize);
@@ -851,13 +852,12 @@ void Graph::GorderGreedy(vector<int>& retorder, vector<int>& skipVertices, int w
 
 	tmpweight=-1;
 	for(int i=0; i<vsize; i++){
-		// tracks highest degree vertex
-		if(graph[i].indegree>tmpweight){
-			tmpweight=graph[i].indegree;
-			tmpindex=i;
-		}else if(graph[i].indegree+graph[i].outdegree==0){
+		if (skipSet.find(i) != skipSet.end()) {
 			unitheap.update[i]=INT_MAX/2;
 			unitheap.DeleteElement(i);
+ 		} else if(graph[i].indegree>tmpweight){ // tracks highest degree vertex
+			tmpweight=graph[i].indegree;
+			tmpindex=i;
 		}
 	}
 
@@ -1041,20 +1041,22 @@ void Graph::GorderGreedy(vector<int>& retorder, vector<int>& skipVertices, int w
 	}
 	order.insert(order.end()-1, skipVertices.begin(), skipVertices.end());
 
-
 #ifndef Release
+	cout << "Size of mapping after Gorder: " << order.size() << endl;
 	vector<int> tmporder=order;
 	sort(tmporder.begin(), tmporder.end());
 	for(int i=0; i<tmporder.size()-1; i++){
 		if(tmporder[i]==tmporder[i+1]){
 			cout << "same elements: " << tmporder[i] << endl;
-			system("pause");
+			exit(1);
+			// system("pause");
 		}
 	}
 	for(int i=0; i<tmporder.size(); i++){
 		if(tmporder[i]!=i){
 			cout << tmporder[i] << '\t' << i << endl;
-			system("pause");
+			exit(1);
+			// system("pause");
 		}
 	}
 	tmporder=vector<int>();
